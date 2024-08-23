@@ -25,6 +25,7 @@ cat <<EOF > credentials/aws-credentials.txt
 [default]
 aws_access_key_id = AKIAZQ3DPHSQIF4FB22C
 aws_secret_access_key = iB5/ppehdnkLT4RMfh+NCT6zFpG8b8UGIXtRJ5xM
+# These creds are fake...
 EOF
 ```
 
