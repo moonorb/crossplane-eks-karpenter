@@ -22,3 +22,5 @@ spec:
       admin_contact: big.lebowski@gmail.com
       service_data: env=test
       service_id: MOONORBS_AWESOME_SERVICE
+    npoolspot: enabled  
+
