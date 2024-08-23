@@ -1,0 +1,131 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xeks.aws.moonorb.cloud
+spec:
+  connectionSecretKeys:
+    - kubeconfig
+  group: aws.moonorb.cloud
+  names:
+    kind: XEKS
+    plural: xeks
+  claimNames:
+    kind: EKSCluster
+    plural: eksclusters
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                parameters:
+                  type: object
+                  description: EKS configuration parameters.
+                  properties:
+                    id:
+                      type: string
+                      description: ID of this Cluster that other objects will use to refer to it.
+                    region:
+                      type: string
+                      description: Region is the region you'd like your resource to be created in.
+                    iam:
+                      type: object
+                      description: IAM configuration to connect as ClusterAdmin.
+                      properties:
+                        roleArn:
+                          description: The IAM Role ARN to connect as ClusterAdmin.
+                          type: string
+                          default: roleArn
+                        userArn:
+                          description: The IAM User ARN to connect as ClusterAdmin.
+                          type: string
+                          default: userArn
+                        autoscalerArn:
+                          description: The AutoScaler Role ARN to connect as ClusterAdmin.
+                          type: string
+                          default: autoscalerArn
+                    subnetIds:
+                      description: EKS Cluster Subnet Id references
+                      items:
+                        type: string
+                      type: array
+                      default: []
+                    publicAccessCidrs:
+                      description: CIDRs that allow K8s API-Should be set to VPC CID of the MGMT cluster
+                      items:
+                        type: string
+                      type: array
+                      default: []   
+                    deletionPolicy:
+                      description: Delete the external resources when the Claim/XR is deleted. Defaults to Delete
+                      enum:
+                        - Delete
+                        - Orphan
+                      type: string
+                      default: Delete
+                    endpointPrivateAccess:
+                      description: Allow K8S API server access from private subnets
+                      type: boolean
+                      default: true
+                    endpointPublicAccess:
+                      description: Allow K8S API server access from public
+                      type: boolean
+                      default: false
+                    additionalCidrIpv4:
+                      description: Additional CIDR to allow EKS API Server access
+                      type: string
+                    providerConfigName:
+                      description: Crossplane ProviderConfig to use for provisioning this resources
+                      type: string
+                      default: default
+                    version:
+                      description: Kubernetes version
+                      type: string
+                      enum:
+                        - "1.31"
+                        - "1.30"
+                        - "1.29"
+                      default: "1.30"
+                    tags:
+                      additionalProperties:
+                        type: string
+                      type: object                       
+                    nodes:
+                      type: object
+                      description: EKS node configuration parameters.
+                      properties:
+                        count:
+                          type: integer
+                          description: Desired node count, from 1 to 100.
+                        instanceType:
+                          type: string
+                          description: instance types associated with the Node Group.
+                          default: t3.small
+                        diskSize:
+                          type: integer
+                          description: Disk Size for each node. Default 20G if not defined
+                      required:
+                        - count
+                        - instanceType
+                  required:
+                    - id
+                    - region
+                    - subnetIds
+                    - providerConfigName
+                    - nodes
+              required:
+                - parameters
+            status:
+              description: A Status represents the observed state
+              properties:
+                eks:
+                  description: Freeform field containing status information for eks
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+              type: object
+

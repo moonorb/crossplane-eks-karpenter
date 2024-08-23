@@ -1,0 +1,81 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xkarpenters.aws.moonorb.cloud
+spec:
+  group: aws.moonorb.cloud
+  names:
+    kind: XKarpenter
+    plural: xkarpenters
+  claimNames:
+    kind: Karpenter
+    plural:  karpenters 
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                parameters:
+                  type: object
+                  description: EKS configuration parameters.
+                  properties:
+                    id:
+                      type: string
+                      description: ID of this Cluster that other objects will use to refer to it.
+                    clusterName:
+                      type: string
+                      description: Full Name of Cluster.
+                    region:
+                      type: string
+                      description: Region is the region you'd like your resource to be created in.
+                    deletionPolicy:
+                      description: Delete the external resources when the Claim/XR is deleted. Defaults to Delete
+                      enum:
+                        - Delete
+                        - Orphan
+                      type: string
+                      default: Delete
+                    providerConfigName:
+                      description: Crossplane ProviderConfig to use for provisioning this resources
+                      type: string
+                      default: default
+                    sg:
+                      description: Security Group to Use for Karpenter
+                      type: string
+                    subnetId:
+                      description: Subnet Id to Use for Karpenter
+                      type: string
+                    tags:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    npooldefault:
+                      description: Set to Enable in Cel filter to Provision Default NodePool
+                      type: string
+                      default: disabled
+                    npoolspot:
+                      description: Set to Enable in Cel filter to Provision Spot NodePool
+                      type: string
+                      default: disabled                      
+                  required:
+                    - id
+                    - clusterName
+                    - region
+                    - deletionPolicy
+                    - providerConfigName
+              required:
+                - parameters
+            status:
+              description: A Status represents the observed state
+              properties:
+                karpenter:
+                  description: Freeform field containing status information for karpenter
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+              type: object

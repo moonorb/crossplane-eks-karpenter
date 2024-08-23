@@ -1,0 +1,483 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xcharts.aws.moonorb.cloud
+  labels:
+      moonorb.cloud/provider: aws
+      moonorb.cloud/type: chart
+      moonorb.cloud/version: v1
+spec:
+  compositeTypeRef:
+    apiVersion: aws.moonorb.cloud/v1alpha1
+    kind: XChart
+  mode: Pipeline
+  pipeline:
+    - step: patch-and-transform
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        patchSets:
+          - name: Name
+            patches:
+              - fromFieldPath: metadata.name
+                toFieldPath: metadata.annotations[crossplane.io/external-name]
+                type: FromCompositeFieldPath
+          - name: providerConfigRef
+            patches:
+              - fromFieldPath: spec.parameters.providerConfigName
+                toFieldPath: spec.providerConfigRef.name
+                type: FromCompositeFieldPath
+          - name: deletionPolicy
+            patches:
+              - fromFieldPath: spec.parameters.deletionPolicy
+                toFieldPath: spec.deletionPolicy
+                type: FromCompositeFieldPath
+          - name: region
+            patches:
+              - fromFieldPath: spec.parameters.region
+                toFieldPath: spec.forProvider.region
+                type: FromCompositeFieldPath
+
+        resources:                              
+          - name: albChart
+            base:
+              apiVersion: helm.crossplane.io/v1beta1
+              kind: Release
+              metadata:
+                name: alb
+              spec:
+                forProvider:
+                  chart:
+                    name: aws-load-balancer-controller
+                    repository: https://aws.github.io/eks-charts
+                    version: 1.8.2
+                  namespace: kube-system
+                  values:
+                    serviceAccount: 
+                      name: alb-controller-sa
+                providerConfigRef:
+                  name: default
+            patches:
+              - fromFieldPath: spec.parameters.id
+                toFieldPath: spec.forProvider.values.clusterName
+                type: FromCompositeFieldPath
+              - fromFieldPath: spec.parameters.id
+                toFieldPath: metadata.name
+                transforms:
+                  - string:
+                      fmt: '%s-alb'
+                      type: Format
+                    type: string
+                type: FromCompositeFieldPath
+              - fromFieldPath: spec.parameters.id
+                toFieldPath: spec.providerConfigRef.name
+                transforms:
+                  - string:
+                      fmt: '%s-helm'
+                      type: Format
+                    type: string
+              - fromFieldPath: spec.parameters.vpcId
+                toFieldPath: spec.forProvider.values.vpcId
+                type: FromCompositeFieldPath
+              - fromFieldPath: spec.parameters.region
+                toFieldPath: spec.forProvider.values.region
+                type: FromCompositeFieldPath
+
+          - name: irsaAlb
+            base:
+              apiVersion: aws.moonorb.cloud/v1alpha1
+              kind: XIRSA
+              spec:
+                compositionSelector:
+                  matchLabels:  # These labels must be present in the IRSA Composition under metadata.labels
+                    moonorb.cloud/provider: aws
+                    moonorb.cloud/type: irsa
+                    moonorb.cloud/version: v1         
+                parameters:
+                  condition: StringEquals
+                  serviceAccount:
+                    name: alb-controller-sa
+                    namespace: kube-system
+                  policyDocument: |
+                    {
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "iam:CreateServiceLinkedRole"
+                                ],
+                                "Resource": "*",
+                                "Condition": {
+                                    "StringEquals": {
+                                        "iam:AWSServiceName": "elasticloadbalancing.amazonaws.com"
+                                    }
+                                }
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "ec2:DescribeAccountAttributes",
+                                    "ec2:DescribeAddresses",
+                                    "ec2:DescribeAvailabilityZones",
+                                    "ec2:DescribeInternetGateways",
+                                    "ec2:DescribeVpcs",
+                                    "ec2:DescribeVpcPeeringConnections",
+                                    "ec2:DescribeSubnets",
+                                    "ec2:DescribeSecurityGroups",
+                                    "ec2:DescribeInstances",
+                                    "ec2:DescribeNetworkInterfaces",
+                                    "ec2:DescribeTags",
+                                    "ec2:GetCoipPoolUsage",
+                                    "ec2:DescribeCoipPools",
+                                    "elasticloadbalancing:DescribeLoadBalancers",
+                                    "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                                    "elasticloadbalancing:DescribeListeners",
+                                    "elasticloadbalancing:DescribeListenerCertificates",
+                                    "elasticloadbalancing:DescribeSSLPolicies",
+                                    "elasticloadbalancing:DescribeRules",
+                                    "elasticloadbalancing:DescribeTargetGroups",
+                                    "elasticloadbalancing:DescribeTargetGroupAttributes",
+                                    "elasticloadbalancing:DescribeTargetHealth",
+                                    "elasticloadbalancing:DescribeTags",
+                                    "elasticloadbalancing:DescribeTrustStores"
+                                ],
+                                "Resource": "*"
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "cognito-idp:DescribeUserPoolClient",
+                                    "acm:ListCertificates",
+                                    "acm:DescribeCertificate",
+                                    "iam:ListServerCertificates",
+                                    "iam:GetServerCertificate",
+                                    "waf-regional:GetWebACL",
+                                    "waf-regional:GetWebACLForResource",
+                                    "waf-regional:AssociateWebACL",
+                                    "waf-regional:DisassociateWebACL",
+                                    "wafv2:GetWebACL",
+                                    "wafv2:GetWebACLForResource",
+                                    "wafv2:AssociateWebACL",
+                                    "wafv2:DisassociateWebACL",
+                                    "shield:GetSubscriptionState",
+                                    "shield:DescribeProtection",
+                                    "shield:CreateProtection",
+                                    "shield:DeleteProtection"
+                                ],
+                                "Resource": "*"
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "ec2:AuthorizeSecurityGroupIngress",
+                                    "ec2:RevokeSecurityGroupIngress"
+                                ],
+                                "Resource": "*"
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "ec2:CreateSecurityGroup"
+                                ],
+                                "Resource": "*"
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "ec2:CreateTags"
+                                ],
+                                "Resource": "arn:aws:ec2:*:*:security-group/*",
+                                "Condition": {
+                                    "StringEquals": {
+                                        "ec2:CreateAction": "CreateSecurityGroup"
+                                    },
+                                    "Null": {
+                                        "aws:RequestTag/elbv2.k8s.aws/cluster": "false"
+                                    }
+                                }
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "ec2:CreateTags",
+                                    "ec2:DeleteTags"
+                                ],
+                                "Resource": "arn:aws:ec2:*:*:security-group/*",
+                                "Condition": {
+                                    "Null": {
+                                        "aws:RequestTag/elbv2.k8s.aws/cluster": "true",
+                                        "aws:ResourceTag/elbv2.k8s.aws/cluster": "false"
+                                    }
+                                }
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "ec2:AuthorizeSecurityGroupIngress",
+                                    "ec2:RevokeSecurityGroupIngress",
+                                    "ec2:DeleteSecurityGroup"
+                                ],
+                                "Resource": "*",
+                                "Condition": {
+                                    "Null": {
+                                        "aws:ResourceTag/elbv2.k8s.aws/cluster": "false"
+                                    }
+                                }
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "elasticloadbalancing:CreateLoadBalancer",
+                                    "elasticloadbalancing:CreateTargetGroup"
+                                ],
+                                "Resource": "*",
+                                "Condition": {
+                                    "Null": {
+                                        "aws:RequestTag/elbv2.k8s.aws/cluster": "false"
+                                    }
+                                }
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "elasticloadbalancing:CreateListener",
+                                    "elasticloadbalancing:DeleteListener",
+                                    "elasticloadbalancing:CreateRule",
+                                    "elasticloadbalancing:DeleteRule"
+                                ],
+                                "Resource": "*"
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "elasticloadbalancing:AddTags",
+                                    "elasticloadbalancing:RemoveTags"
+                                ],
+                                "Resource": [
+                                    "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*",
+                                    "arn:aws:elasticloadbalancing:*:*:loadbalancer/net/*/*",
+                                    "arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*"
+                                ],
+                                "Condition": {
+                                    "Null": {
+                                        "aws:RequestTag/elbv2.k8s.aws/cluster": "true",
+                                        "aws:ResourceTag/elbv2.k8s.aws/cluster": "false"
+                                    }
+                                }
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "elasticloadbalancing:AddTags",
+                                    "elasticloadbalancing:RemoveTags"
+                                ],
+                                "Resource": [
+                                    "arn:aws:elasticloadbalancing:*:*:listener/net/*/*/*",
+                                    "arn:aws:elasticloadbalancing:*:*:listener/app/*/*/*",
+                                    "arn:aws:elasticloadbalancing:*:*:listener-rule/net/*/*/*",
+                                    "arn:aws:elasticloadbalancing:*:*:listener-rule/app/*/*/*"
+                                ]
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                                    "elasticloadbalancing:SetIpAddressType",
+                                    "elasticloadbalancing:SetSecurityGroups",
+                                    "elasticloadbalancing:SetSubnets",
+                                    "elasticloadbalancing:DeleteLoadBalancer",
+                                    "elasticloadbalancing:ModifyTargetGroup",
+                                    "elasticloadbalancing:ModifyTargetGroupAttributes",
+                                    "elasticloadbalancing:DeleteTargetGroup"
+                                ],
+                                "Resource": "*",
+                                "Condition": {
+                                    "Null": {
+                                        "aws:ResourceTag/elbv2.k8s.aws/cluster": "false"
+                                    }
+                                }
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "elasticloadbalancing:AddTags"
+                                ],
+                                "Resource": [
+                                    "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*",
+                                    "arn:aws:elasticloadbalancing:*:*:loadbalancer/net/*/*",
+                                    "arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*"
+                                ],
+                                "Condition": {
+                                    "StringEquals": {
+                                        "elasticloadbalancing:CreateAction": [
+                                            "CreateTargetGroup",
+                                            "CreateLoadBalancer"
+                                        ]
+                                    },
+                                    "Null": {
+                                        "aws:RequestTag/elbv2.k8s.aws/cluster": "false"
+                                    }
+                                }
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "elasticloadbalancing:RegisterTargets",
+                                    "elasticloadbalancing:DeregisterTargets"
+                                ],
+                                "Resource": "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*"
+                            },
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "elasticloadbalancing:SetWebAcl",
+                                    "elasticloadbalancing:ModifyListener",
+                                    "elasticloadbalancing:AddListenerCertificates",
+                                    "elasticloadbalancing:RemoveListenerCertificates",
+                                    "elasticloadbalancing:ModifyRule"
+                                ],
+                                "Resource": "*"
+                            }
+                        ]
+                    }                 
+
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.providerConfigName
+                toFieldPath: spec.parameters.providerConfigName
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.deletionPolicy
+                toFieldPath: spec.parameters.deletionPolicy
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: metadata.name
+                transforms:
+                  - string:
+                      fmt: '%s-alb'
+                      type: Format
+                    type: string
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: spec.parameters.id
+
+          - name: externalSecretsChart
+            base:
+              apiVersion: helm.crossplane.io/v1beta1
+              kind: Release
+              metadata:
+                name: external-secrets
+              spec:
+                forProvider:
+                  chart:
+                    name: external-secrets
+                    repository: https://charts.external-secrets.io
+                    version: 0.10.0
+                  namespace: external-secrets
+                  values:
+                    serviceAccount:
+                      create: false
+                      name: external-secrets-sa
+                providerConfigRef:
+                  name: default
+            patches:
+              - fromFieldPath: spec.parameters.id
+                toFieldPath: spec.forProvider.values.clusterName
+                type: FromCompositeFieldPath
+              - fromFieldPath: spec.parameters.id
+                toFieldPath: metadata.name
+                transforms:
+                  - string:
+                      fmt: '%s-external-secrets'
+                      type: Format
+                    type: string
+                type: FromCompositeFieldPath                    
+              - fromFieldPath: spec.parameters.id
+                toFieldPath: spec.providerConfigRef.name
+                transforms:
+                  - string:
+                      fmt: '%s-helm'
+                      type: Format
+                    type: string
+
+          - name: irsaExternalSecrets
+            base:
+              apiVersion: aws.moonorb.cloud/v1alpha1
+              kind: XIRSA
+              spec:
+                parameters:
+                  condition: StringEquals
+                  serviceAccount:
+                    name: external-secrets-sa
+                    namespace: external-secrets
+                  policyDocument: |
+                    {
+                        "Statement": [
+                            {
+                                "Action": "ssm:DescribeParameters",
+                                "Effect": "Allow",
+                                "Resource": "*"
+                            },
+                            {
+                                "Action": [
+                                    "ssm:*"
+                                ],
+                                "Effect": "Allow",
+                                "Resource": "arn:aws:ssm:*:*:parameter/*"
+                            },
+                            {
+                                "Action": "secretsmanager:ListSecrets",
+                                "Effect": "Allow",
+                                "Resource": "*"
+                            },
+                            {
+                                "Action": [
+                                    "secretsmanager:*"
+                                ],
+                                "Effect": "Allow",
+                                "Resource": "arn:aws:secretsmanager:*:*:secret:*"
+                            },
+                            {
+                                "Action": "kms:Decrypt",
+                                "Effect": "Allow",
+                                "Resource": "arn:aws:kms:*:*:key/*"
+                            }
+                        ],
+                        "Version": "2012-10-17"
+                    }               
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.providerConfigName
+                toFieldPath: spec.parameters.providerConfigName
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.deletionPolicy
+                toFieldPath: spec.parameters.deletionPolicy
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: metadata.name
+                transforms:
+                  - string:
+                      fmt: '%s-external-secrets'
+                      type: Format
+                    type: string
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.parameters.id
+                toFieldPath: spec.parameters.id
+
+    - step: detect-readiness
+      functionRef:
+        name: function-auto-ready
+    - step: sequence-creation
+      functionRef:
+        name: function-sequencer
+      input:
+        apiVersion: sequencer.fn.crossplane.io/v1beta1
+        kind: Input
+        rules:
+          - sequence:
+            - irsaAlb
+            - albChart
+            - irsaExternalSecrets
+            - externalSecretsChart

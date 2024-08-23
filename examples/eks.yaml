@@ -1,0 +1,32 @@
+apiVersion: aws.moonorb.cloud/v1alpha1
+kind: EKSCluster
+metadata:
+  name: moonorb-test-x
+  namespace: test-ns
+  labels:
+    addonselector: moonorb-test-x # Must match label in Addon for ClusterNameSelector  
+spec:
+  compositionSelector:
+    matchLabels:
+      moonorb.cloud/provider: aws
+      moonorb.cloud/type: ekscluster
+      moonorb.cloud/version: v1
+  parameters:
+    id: moonorb-test-x
+    region: us-east-1
+    version: "1.30"    
+    nodes:
+      count: 3
+      instanceType: t3.small
+      diskSize: 30
+    providerConfigName: non-default
+    endpointPrivateAccess: false
+    endpointPublicAccess: true
+    subnetIds: ["subnet-0e122b4e7c9af1fc0","subnet-090d221cbb2841872"] # !!! Must be modified with your Subnets
+    additionalCidrIpv4: 172.31.0.0/16 # Allow HTTPS access to the Cluster from VPC. Should be modified with your VPC CIDR.
+    tags:
+      admin_contact: big.lebowski@gmail.com
+      service_data: env=test
+      service_id: MOONORBS_AWESOME_SERVICE
+  writeConnectionSecretToRef:
+    name: moonorb-test-x-kubeconfig    

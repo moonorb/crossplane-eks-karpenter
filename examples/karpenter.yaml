@@ -1,0 +1,24 @@
+apiVersion: aws.moonorb.cloud/v1alpha1
+kind: Karpenter
+metadata:
+  name: moonorb-test-x
+  namespace: test-ns
+  labels:
+    addonselector: moonorb-test-x
+spec:
+  compositionSelector:
+    matchLabels:
+      moonorb.cloud/provider: aws
+      moonorb.cloud/type: karpenter
+      moonorb.cloud/version: v1
+  parameters:
+    clusterName: moonorb-test-x
+    id: moonorb-test-x
+    region: us-east-1
+    providerConfigName: non-default
+    sg: sg-0e3f2993b5b15e433 # !!! Must be modified with EKS Cluster security Group
+    subnetId: subnet-0e122b4e7c9af1fc0"  # !!! Must be modified with your subnet. Karpenter Nodes will be provisioned with ips from this subnet
+    tags:
+      admin_contact: big.lebowski@gmail.com
+      service_data: env=test
+      service_id: MOONORBS_AWESOME_SERVICE

@@ -1,0 +1,121 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xcharts.aws.moonorb.cloud
+spec:
+  group: aws.moonorb.cloud
+  names:
+    kind: XChart
+    plural: xcharts
+  claimNames:
+    kind: Chart
+    plural: charts
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                parameters:
+                  type: object
+                  description: EKS configuration parameters.
+                  properties:
+                    roletype:
+                      type: string
+                      description: Type of Role
+                    id:
+                      type: string
+                      description: ID of this Cluster that other objects will use to refer to it.
+                    region:
+                      type: string
+                      description: Region is the region you'd like your resource to be created in.
+                    vpcId:
+                      type: string
+
+                    iam:
+                      type: object
+                      description: IAM configuration to connect as ClusterAdmin.
+                      properties:
+                        roleArn:
+                          description: The IAM Role ARN to connect as ClusterAdmin.
+                          type: string
+                          default: roleArn
+                        userArn:
+                          description: The IAM User ARN to connect as ClusterAdmin.
+                          type: string
+                          default: userArn
+                        autoscalerArn:
+                          description: The AutoScaler Role ARN to connect as ClusterAdmin.
+                          type: string
+                          default: autoscalerArn 
+                    deletionPolicy:
+                      description: Delete the external resources when the Claim/XR is deleted. Defaults to Delete
+                      enum:
+                        - Delete
+                        - Orphan
+                      type: string
+                      default: Delete                  
+                    providerConfigName:
+                      description: Crossplane ProviderConfig to use for provisioning this resources
+                      type: string
+                      default: default
+                    serviceAccount:
+                      type: object
+                      description: Configuration for SA
+                      properties:
+                        name:
+                          type: string
+                          description: name kubernetes SA
+                        namespace:
+                          type: string
+                          description: namespace kubernetes SA
+                      required:
+                        - name
+                        - namespace
+                    condition:
+                      type: string
+                      description: This is the whether or not the equals is a hard match or like query
+                      default: StringEquals
+                      enum:
+                        - StringEquals
+                        - StringLike
+                    policyDocument:
+                      type: string
+                      description: The JSON policy document that is the content for the policy.
+                    tags:
+                      additionalProperties:
+                        type: string
+                      type: object                      
+                  required:
+                    - id
+                    - region
+                    - deletionPolicy
+                    - providerConfigName                
+              required:
+                - parameters
+            status:
+              type: object
+              properties:
+                stsinfo:
+                  description: Freeform field containing status information
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                irsa:
+                  description: Freeform field containing status information for irsa
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+                roleArn:
+                  description: The arn of the role
+                  type: string
+                policyArn:
+                  description: The arn of the policy
+                  type: string
+                observed:
+                  description: Freeform field containing information about the observed status.
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true

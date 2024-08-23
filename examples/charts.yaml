@@ -1,0 +1,22 @@
+apiVersion: aws.moonorb.cloud/v1alpha1
+kind: Chart
+metadata:
+  name: moonorb-test-x
+  namespace: test-ns
+  labels:
+    addonselector: moonorb-test-x # Must match the label in EKS Cluster Claim
+spec:
+  compositionSelector:
+    matchLabels:
+      moonorb.cloud/provider: aws
+      moonorb.cloud/type: chart
+      moonorb.cloud/version: v1
+  parameters:
+    id: moonorb-test-x 
+    region: us-east-1
+    providerConfigName: non-default
+    vpcId: vpc-0113aa3ea0e7b21b8 # !!! Must be modified according to your VPC 
+    tags:
+      admin_contact: big.lebowski@gmail.com
+      service_data: env=test
+      service_id: MOONORBS_AWESOME_SERVICE
