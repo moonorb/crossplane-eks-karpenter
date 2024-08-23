@@ -58,7 +58,7 @@ spec:
                     npooldefault:
                       description: Set to Enable in Cel filter to Provision Default NodePool
                       type: string
-                      default: disabled
+                      default: enabled
                     npoolspot:
                       description: Set to Enable in Cel filter to Provision Spot NodePool
                       type: string
