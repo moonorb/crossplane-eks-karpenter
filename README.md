@@ -146,30 +146,32 @@ watch "crossplane beta trace karpenter moonorb-test-x -n test-ns"
 
 NAME                                                       SYNCED   READY   STATUS
 Karpenter/moonorb-test-x (test-ns)                         True     True    Available
-└─ XKarpenter/moonorb-test-x-5nbjp                         True     True    Available
+└─ XKarpenter/moonorb-test-x-28z9j                         True     True    Available
    ├─ XIRSA/moonorb-test-x-karpenter                       True     True    Available
-   │  ├─ Policy/moonorb-test-x-5nbjp-ggrcq                 True     True    Available
-   │  ├─ RolePolicyAttachment/moonorb-test-x-5nbjp-w9fdq   True     True    Available
-   │  ├─ Role/moonorb-test-x-5nbjp-fbt4g                   True     True    Available
+   │  ├─ Policy/moonorb-test-x-28z9j-hfdzx                 True     True    Available
+   │  ├─ RolePolicyAttachment/moonorb-test-x-28z9j-dwrrp   True     True    Available
+   │  ├─ Role/moonorb-test-x-28z9j-8npwb                   True     True    Available
    │  └─ Object/moonorb-test-x-karpenter-role              True     True    Available
    ├─ Rule/moonorb-test-x-healthevent                      True     True    Available
    ├─ Rule/moonorb-test-x-instancerebalance                True     True    Available
    ├─ Rule/moonorb-test-x-instancestatechange              True     True    Available
    ├─ Rule/moonorb-test-x-spotinterrupt                    True     True    Available
-   ├─ Target/moonorb-test-x-5nbjp-4z6g8                    True     True    Available
-   ├─ Target/moonorb-test-x-5nbjp-ph2dn                    True     True    Available
-   ├─ Target/moonorb-test-x-5nbjp-rmthr                    True     True    Available
-   ├─ Target/moonorb-test-x-5nbjp-xjm4r                    True     True    Available
-   ├─ Release/moonorb-test-x-5nbjp-qpb9p                   True     True    Available
-   ├─ InstanceProfile/moonorb-test-x-5nbjp-gd87b           True     True    Available
-   ├─ RolePolicyAttachment/moonorb-test-x-5nbjp-947k9      True     True    Available
-   ├─ RolePolicyAttachment/moonorb-test-x-5nbjp-9rmqd      True     True    Available
-   ├─ RolePolicyAttachment/moonorb-test-x-5nbjp-bwtvg      True     True    Available
-   ├─ RolePolicyAttachment/moonorb-test-x-5nbjp-xl7k6      True     True    Available
-   ├─ Role/moonorb-test-x-5nbjp-2v956                      True     True    Available
-   ├─ Object/moonorb-test-x-5nbjp-gg6gm                    True     True    Available
-   ├─ Object/moonorb-test-x-5nbjp-rd7bh                    True     True    Available
-   ├─ Object/moonorb-test-x-5nbjp-tlnmr                    True     True    Available
+   ├─ Target/moonorb-test-x-28z9j-cdb2x                    True     True    Available
+   ├─ Target/moonorb-test-x-28z9j-hfmsz                    True     True    Available
+   ├─ Target/moonorb-test-x-28z9j-phqtz                    True     True    Available
+   ├─ Target/moonorb-test-x-28z9j-sdcvm                    True     True    Available
+   ├─ Release/moonorb-test-x-28z9j-9flgt                   True     True    Available
+   ├─ InstanceProfile/moonorb-test-x-28z9j-cl25r           True     True    Available
+   ├─ RolePolicyAttachment/moonorb-test-x-28z9j-9zc8f      True     True    Available
+   ├─ RolePolicyAttachment/moonorb-test-x-28z9j-dhhc2      True     True    Available
+   ├─ RolePolicyAttachment/moonorb-test-x-28z9j-h4cdm      True     True    Available
+   ├─ RolePolicyAttachment/moonorb-test-x-28z9j-xf6sx      True     True    Available
+   ├─ Role/moonorb-test-x-28z9j-csjjt                      True     True    Available
+   ├─ Object/moonorb-test-x-28z9j-7gqs8                    True     True    Available
+   ├─ Object/moonorb-test-x-28z9j-bcqjb                    True     True    Available
+   ├─ Object/moonorb-test-x-28z9j-fb4jw                    True     True    Available
+   ├─ QueuePolicy/moonorb-test-x-28z9j-gjjmc               True     True    Available
+   └─ Queue/moonorb-test-x-28z9j-dfg4z                     True     True    Available
 
 ```
 
