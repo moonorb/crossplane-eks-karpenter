@@ -16,8 +16,8 @@ spec:
     id: moonorb-test-x
     region: us-east-1
     providerConfigName: non-default
-    sg: sg-0e3f2993b5b15e433 # !!! Must be modified with EKS Cluster security Group
-    subnetId: subnet-0e122b4e7c9af1fc0"  # !!! Must be modified with your subnet. Karpenter Nodes will be provisioned with ips from this subnet
+    sg: sg-0f214a9292d7d0b5f # !!! Must be modified with EKS Cluster security Group
+    subnetId: subnet-0c6e23f0457a0e3a1  # !!! Must be modified with your subnet. Karpenter Nodes will be provisioned with ips from this subnet
     tags:
       admin_contact: big.lebowski@gmail.com
       service_data: env=test
