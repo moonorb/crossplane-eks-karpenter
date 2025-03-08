@@ -35,12 +35,8 @@ kubectl create secret generic aws-creds \
 
 kubectl apply -f  providers/provider.yaml 
 
-sleep 30
+sleep 50
 
 kubectl apply -f  providerconfigs/providerconfig.yaml
-
-echo "Installation Complete" 
-
-#kubectl apply -f https://raw.githubusercontent.com/moonorb/crossplane-demo/main/providers/provider.yaml
-#sleep 30
-#kubectl apply -f https://raw.githubusercontent.com/moonorb/crossplane-demo/main/providerconfigs/providerconfig.yaml
+kubectl get providerconfig -A
+echo "Installation Complete"
